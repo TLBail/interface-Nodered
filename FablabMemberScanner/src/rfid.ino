@@ -1,6 +1,35 @@
+#include <SPI.h>
+#include <MFRC522.h>
+#define SS_PIN D8
+#define RST_PIN D0
+MFRC522 rfid(SS_PIN, RST_PIN); // Instance of the class
+MFRC522::MIFARE_Key key;
+// Init array that will store new NUID
+byte nuidPICC[4];
+
+
 
 
 // RFID FONCTION
+
+void rfidSetup(){
+  //RFID SETUP
+  SPI.begin(); // Init SPI bus
+  rfid.PCD_Init(); // Init MFRC522
+  Serial.println();
+  Serial.print(F("Reader :"));
+  rfid.PCD_DumpVersionToSerial();
+  for (byte i = 0; i < 6; i++) {
+   key.keyByte[i] = 0xFF;
+  }
+  Serial.println();
+  Serial.println(F("This code scan the MIFARE Classic NUID."));
+  Serial.print(F("Using the following key:"));
+  printHex(key.keyByte, MFRC522::MF_KEY_SIZE);
+ 
+
+}
+
 
 int checkRfid(){
 
@@ -21,10 +50,6 @@ int checkRfid(){
    Serial.println(F("Your tag is not of type MIFARE Classic."));
    return 0;
  }
- if (rfid.uid.uidByte[0] != nuidPICC[0] ||
-     rfid.uid.uidByte[1] != nuidPICC[1] ||
-     rfid.uid.uidByte[2] != nuidPICC[2] ||
-     rfid.uid.uidByte[3] != nuidPICC[3] ) {
   Serial.println(F("A new card has been detected."));
   // Store NUID into nuidPICC array
   for (byte i = 0; i < 4; i++) {
@@ -38,9 +63,8 @@ int checkRfid(){
   Serial.println();
 
 
-  drawstyles("bonjour " + (String)printHex(rfid.uid.uidByte, rfid.uid.size) + " \n confirmé votre identité(bouton gauche) ou infirmé(bouton droit)");
+  drawstyles("bonjour " + (String)printHex(rfid.uid.uidByte, rfid.uid.size) );
   valueToReturn = 1;
- }    
   // Halt PICC
   rfid.PICC_HaltA();
   // Stop encryption on PCD
